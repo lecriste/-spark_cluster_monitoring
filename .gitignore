@@ -1,0 +1,11 @@
+# Vagrant:
+.vagrant/
+
+# Logs:
+*.log
+
+# Mac OS X:
+.DS_Store
+
+*.tgz
+*.tar.*
