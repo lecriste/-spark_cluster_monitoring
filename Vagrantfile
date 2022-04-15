@@ -28,7 +28,7 @@ Vagrant.configure("2") do |config|
       echo "SPARK_MASTER_HOST="#{Master_IP} >> /home/vagrant/spark/conf/spark-env.sh
     SHELL
 
-    node.vm.provision "shell", run: "always", inline: "/home/vagrant/spark/sbin/start-master.sh -h "+ Master_IP
+    node.vm.provision "shell", run: "always", inline: "/home/vagrant/spark/sbin/start-master.sh -h "+Master_IP
   end
 
   # worker nodes:
@@ -55,7 +55,7 @@ Vagrant.configure("2") do |config|
         echo "SPARK_MASTER_IP="#{Master_IP} >> /home/vagrant/spark/conf/spark-env.sh
       SHELL
 
-      node.vm.provision "shell", run: "always", inline: "/home/vagrant/spark/sbin/start-worker.sh -h "+ Worker_IP +" spark://"+ Master_IP +":"+ Master_port
+      node.vm.provision "shell", run: "always", inline: "/home/vagrant/spark/sbin/start-worker.sh -h "+Worker_IP+" spark://"+Master_IP+":"+Master_port
     end
   end
 end
