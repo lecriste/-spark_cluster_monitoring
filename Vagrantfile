@@ -1,4 +1,6 @@
 Vagrant.configure("2") do |config|
+  Home = "/home/vagrant"
+  Spark = "spark-3.2.1-bin-hadoop3.2"
   N_workers = 2
   Master_IP = "192.168.56.20"
   Master_port = "7077"
@@ -17,18 +19,23 @@ Vagrant.configure("2") do |config|
       vb.cpus = 2
     end
 
+    node.vm.provision "shell" do |s|
+      s.inline = "apt-get install -y python"
+    end
+
+    node.vm.provision "ansible" do |ansible|
+      ansible.playbook = "hn.yml"
+      ansible.become = true
+    end
+
     node.vm.provision "shell", inline: <<-SHELL 
-      apt-get install -y python-dev ntp default-jdk
-      mkdir /home/vagrant/spark
-      tar xf /vagrant/spark.tgz -C /home/vagrant/spark --strip 1
-      echo "export SPARK_HOME=/home/vagrant/spark" >> /home/vagrant/.bashrc
-      echo "export PATH=$PATH:/home/vagrant/spark/bin" >> /home/vagrant/.bashrc
-      echo "spark.master spark://"#{Master_IP}":"#{Master_port} >> /home/vagrant/spark/conf/spark-defaults.conf
-      echo "SPARK_LOCAL_IP="#{Master_IP} >> /home/vagrant/spark/conf/spark-env.sh
-      echo "SPARK_MASTER_HOST="#{Master_IP} >> /home/vagrant/spark/conf/spark-env.sh
+      mv #{Home}/#{Spark} #{Home}/spark
+      echo "spark.master spark://"#{Master_IP}":"#{Master_port} >> #{Home}/spark/conf/spark-defaults.conf
+      echo "SPARK_LOCAL_IP="#{Master_IP} >> #{Home}/spark/conf/spark-env.sh
+      echo "SPARK_MASTER_HOST="#{Master_IP} >> #{Home}/spark/conf/spark-env.sh
     SHELL
 
-    node.vm.provision "shell", run: "always", inline: "/home/vagrant/spark/sbin/start-master.sh -h "+Master_IP
+    node.vm.provision "shell", run: "always", inline: Home+"/spark/sbin/start-master.sh -h "+Master_IP
   end
 
   # worker nodes:
@@ -45,17 +52,22 @@ Vagrant.configure("2") do |config|
         vb.cpus = 2
       end
 
+      node.vm.provision "shell" do |s|
+        s.inline = "apt-get install -y python"
+      end
+
+      node.vm.provision "ansible" do |ansible|
+        ansible.playbook = "wn.yml"
+        ansible.become = true
+      end
+
       node.vm.provision "shell", inline: <<-SHELL
-        apt-get install -y python-dev ntp avahi-daemon default-jdk
-        mkdir /home/vagrant/spark
-        tar xf /vagrant/spark.tgz -C /home/vagrant/spark --strip 1
-        echo "export SPARK_HOME=/home/vagrant/spark" >> /home/vagrant/.bashrc
-        echo "export PATH=$PATH:/home/vagrant/spark/bin" >> /home/vagrant/.bashrc
-        echo "SPARK_LOCAL_IP="#{Worker_IP} >> /home/vagrant/spark/conf/spark-env.sh
-        echo "SPARK_MASTER_IP="#{Master_IP} >> /home/vagrant/spark/conf/spark-env.sh
+        mv #{Home}/#{Spark} #{Home}/spark
+        echo "SPARK_LOCAL_IP="#{Worker_IP} >> #{Home}/spark/conf/spark-env.sh
+        echo "SPARK_MASTER_IP="#{Master_IP} >> #{Home}/spark/conf/spark-env.sh
       SHELL
 
-      node.vm.provision "shell", run: "always", inline: "/home/vagrant/spark/sbin/start-worker.sh -h "+Worker_IP+" spark://"+Master_IP+":"+Master_port
+      node.vm.provision "shell", run: "always", inline: Home+"/spark/sbin/start-worker.sh -h "+Worker_IP+" spark://"+Master_IP+":"+Master_port
     end
   end
 end

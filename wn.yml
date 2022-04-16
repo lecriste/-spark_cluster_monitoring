@@ -1,0 +1,24 @@
+---
+- hosts: all
+  tasks:
+  - name: install ntp, avahi-daemon, and default-jdk
+    apt: name={{item}} state=present
+    with_items:
+      - ntp
+      - avahi-daemon
+      - default-jdk
+  - name: extract spark
+    unarchive:
+      remote_src: yes
+      src: /vagrant/spark.tgz
+      dest: /home/vagrant/
+      owner: vagrant
+      creates: /home/vagrant/spark-3.2.1-bin-hadoop3.2
+  - name: add SPARK_HOME environment variable
+    lineinfile:
+      dest: /home/vagrant/.bashrc
+      line: 'export SPARK_HOME=/home/vagrant/spark'
+  - name: add spark to PATH
+    lineinfile:
+      dest: /home/vagrant/.bashrc
+      line: 'export PATH=$PATH:/home/vagrant/spark/bin'

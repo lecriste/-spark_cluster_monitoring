@@ -5,6 +5,7 @@ Vagrant template to provision a standalone Spark cluster.
 
 - Spark running as a standalone cluster. Tested with Spark 3.2.1.
 - One head node Ubuntu 16.04 machine and `N` worker machines.
+- Use Ansible for provisioning.
 
 # Usage #
 
