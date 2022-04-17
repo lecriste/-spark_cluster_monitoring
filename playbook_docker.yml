@@ -2,10 +2,12 @@
 - hosts: all
   become: true
   vars:
-    container_count: 4
-    default_container_name: docker
-    default_container_image: ubuntu #:xenial
-    default_container_command: sleep 1d
+    grafana_containers: 1
+    grafana_container_name: graf
+    grafana_image: grafana/grafana-enterprise #ubuntu #:xenial
+    prometheus_containers: 1
+    prometheus_container_name: prom
+    prometheus_image: prom/prometheus
 
   tasks:
     - name: Install aptitude
@@ -43,23 +45,34 @@
         state: latest
         update_cache: true
 
-    #- name: Use python3
-    #  shell:
-    #    cmd sudo su; update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+    - name: Use python3
+      shell:
+        cmd sudo su; update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 
     - name: Install Docker Module for Python
       pip:
         name: docker-py # for python < 3
 
-    - name: Pull default Docker image
+    - name: Pull Grafana image
       community.docker.docker_image:
-        name: "{{ default_container_image }}"
+        name: "{{ grafana_image }}"
         source: pull
 
-    - name: Create default containers
+    - name: Pull Prometheus image
+      community.docker.docker_image:
+        name: "{{ prometheus_image }}"
+        source: pull
+
+    - name: Create Grafana containers
       community.docker.docker_container:
-        name: "{{ default_container_name }}{{ item }}"
-        image: "{{ default_container_image }}"
-        command: "{{ default_container_command }}"
+        name: "{{ grafana_container_name }}{{ item }}"
+        image: "{{ grafana_image }}"
         state: present
-      with_sequence: count={{ container_count }}
+      with_sequence: count={{ grafana_containers }}
+
+    - name: Create Prometheus containers
+      community.docker.docker_container:
+        name: "{{ prometheus_container_name }}{{ item }}"
+        image: "{{ prometheus_image }}"
+        state: present
+      with_sequence: count={{ prometheus_containers }}
