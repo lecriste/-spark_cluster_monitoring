@@ -68,6 +68,28 @@ Vagrant.configure("2") do |config|
       SHELL
 
       node.vm.provision "shell", run: "always", inline: Home+"/spark/sbin/start-worker.sh -h "+Worker_IP+" spark://"+Master_IP+":"+Master_port
+
+      # Populate #{Home}/.ssh/authorized_keys
+      node.vm.provision "shell", inline: <<-SHELL
+        ssh-keyscan #{Master_IP} >> ~/.ssh/known_hosts
+        ssh -i /vagrant/.vagrant/machines/hn0/virtualbox/private_key vagrant@#{Master_IP} << EOF
+          # as vagrant
+          ssh-keyscan #{Worker_IP} >> ~/.ssh/known_hosts
+          cat ~/.ssh/id_rsa.pub | ssh -i /vagrant/.vagrant/machines/wn#{i}/virtualbox/private_key vagrant@#{Worker_IP} "cat >> #{Home}/.ssh/authorized_keys"
+          # as root
+          sudo su
+          sed -i "1i#{Worker_IP}" /etc/ansible/hosts
+          ssh-keyscan #{Worker_IP} >> ~/.ssh/known_hosts
+          cat ~/.ssh/id_rsa.pub | ssh -i /vagrant/.vagrant/machines/wn#{i}/virtualbox/private_key vagrant@#{Worker_IP} "cat >> #{Home}/.ssh/authorized_keys"
+        #EOF
+      SHELL
+
+      # Enable root access from Master
+      node.vm.provision "shell", inline: <<-SHELL
+        sudo su
+        cp #{Home}/.ssh/authorized_keys ~/.ssh/authorized_keys
+      SHELL
+
     end
   end
 end

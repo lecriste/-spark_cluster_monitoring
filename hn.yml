@@ -27,3 +27,12 @@
     lineinfile:
       dest: /home/vagrant/.bashrc
       line: 'export PATH=$PATH:/home/vagrant/spark/bin'
+  - name: SSH KeyGen command for root
+    shell: >
+      ssh-keygen -q -N "" -f ~/.ssh/id_rsa
+      creates="~/.ssh/id_rsa"
+  - name: SSH KeyGen command for vagrant
+    become_user: vagrant
+    shell: >
+      ssh-keygen -q -N "" -f ~/.ssh/id_rsa
+      creates="~/.ssh/id_rsa"
